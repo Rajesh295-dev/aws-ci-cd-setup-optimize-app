@@ -122,7 +122,6 @@ The application architecture includes:
 ## ECS Service and Cluster Setup
 
 ![AWS Architecture Diagram](./public/cluster1.png)
-cluster1.png
 
 1. **Task Definition**:
 
@@ -235,7 +234,9 @@ cluster1.png
 ![AWS Architecture Diagram](./public/loadBalanceHealth.png)
 
 1. Enabled **CloudWatch Logs** for ECS tasks and application-level logs.
-   ![AWS Architecture Diagram](./public/cloudwatch.png)
+
+![AWS Architecture Diagram](./public/cloudwatch.png)
+
 2. Configured **CloudWatch Alarms** for task health and resource utilization.
 
 ---
