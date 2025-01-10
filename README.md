@@ -16,12 +16,12 @@ This repository documents the comprehensive setup of the AWS CI/CD pipeline for 
 - [ECS Task Definition](#ecs-task-definition)
 - [ECS Service and Cluster Setup](#ecs-service-and-cluster-setup)
 - [Amazon S3 for Picture Storage](#amazon-s3-for-picture-storage)
+- [Amazon RDS (MySQL) Setup](#amazon-rds-mysql-setup)
+- [AWS CodePipeline Configuration](#aws-codepipeline-configuration)
 - [CodeBuild Configuration](#codebuild-configuration)
 - [Monitoring and Logging](#monitoring-and-logging)
 - [Key Learnings](#key-learnings)
 - [Future Improvements](#future-improvements)
-
----
 
 ## Introduction
 
@@ -37,16 +37,15 @@ The application architecture includes:
 
 ## AWS Services Utilized
 
-- **[Amazon Elastic Container Registry (ECR)](https://aws.amazon.com/ecr/)**: Stores Docker images.
-- **[Amazon Elastic Container Service (ECS)](https://aws.amazon.com/ecs/)**: Runs containerized tasks using Fargate.
-- **[Application Load Balancer (ALB)](https://aws.amazon.com/elasticloadbalancing/application-load-balancer/)**: Routes traffic securely to ECS tasks.
-- **[Amazon S3](https://aws.amazon.com/s3/)**: Stores application pictures and files.
 - **[AWS CodePipeline](https://aws.amazon.com/codepipeline/)**: Automates the CI/CD process.
 - **[AWS CodeBuild](https://aws.amazon.com/codebuild/)**: Builds and tests the application.
 - **[Amazon CloudWatch](https://aws.amazon.com/cloudwatch/)**: Monitors logs and metrics.
+- **[Amazon Elastic Container Registry (ECR)](https://aws.amazon.com/ecr/)**: Stores Docker images.
+- **[Amazon Elastic Container Service (ECS)](https://aws.amazon.com/ecs/)**: Runs containerized tasks using Fargate.
+- **[Application Load Balancer (ALB)](https://aws.amazon.com/elasticloadbalancing/application-load-balancer/)**: Routes traffic securely to ECS tasks.
 - **[AWS Route 53](https://aws.amazon.com/route53/)**: Manages domain and DNS (e.g., `optimizeservice.net`).
-
----
+- **[Amazon S3](https://aws.amazon.com/s3/)**: Stores application pictures and files.
+- **[Amazon RDS (MySQL)](https://aws.amazon.com/rds/)**: Provides a scalable and managed relational database for storing application data, including user and employee records.
 
 ## VPC Setup
 
@@ -158,7 +157,33 @@ The application architecture includes:
 
 ---
 
-## Amazon S3 for Picture Storage
+## AWS CodePipeline Configuration
+
+![AWS Architecture Diagram](./public/codepipeline.png)
+
+AWS CodePipeline is configured to automate the deployment process, integrating with CodeBuild and ECS.
+
+1. **Pipeline Stages**:
+
+   - **Source Stage**:
+     - Retrieves source code from a GitHub repository.
+   - **Build Stage**:
+     - Executes CodeBuild projects for the frontend and backend applications.
+     - Generates Docker images for ECS deployment.
+   - **Deploy Stage**:
+     - Deploys updated images to ECS services using imagedefinitions.json.
+
+2. **Triggers**:
+
+   - Any commit to the main branch triggers the pipeline.
+   - CodePipeline integrates with GitHub webhooks for real-time updates.
+
+3. **Artifact Management**:
+   - The pipeline stores imagedefinitions.json files for both the client and server, specifying the image versions to deploy.
+
+## Amazon S3 bucket for Picture Storage
+
+![AWS Architecture Diagram](./public/S3bucket.png)
 
 1. **Bucket Setup**:
 
@@ -171,12 +196,44 @@ The application architecture includes:
    - Allowed secure access via IAM roles and pre-signed URLs.
 
 3. **Integration**:
+
    - Configured the backend to handle file uploads and retrievals securely.
    - Used pre-signed URLs for temporary access to files.
 
+4. **Security Group Setup**:
+   - Configured a dedicated security group for the S3 bucket to restrict access.
+   - Allowed traffic only from trusted IP ranges or associated VPC endpoints.
+
 ---
 
+## Amazon RDS (MySQL) Setup
+
+![AWS Architecture Diagram](./public/RDS.png)
+
+Amazon RDS (Relational Database Service) is used to manage the application's database, providing high availability, automatic backups, and scalability.
+
+1. **Instance Configuration**:
+
+   - **Engine**: MySQL.
+   - **Instance Class**: `db.t3.micro` (cost-effective for small-scale workloads).
+   - **Allocated Storage**: 20 GB with auto-scaling enabled.
+
+2. **Database Connectivity**:
+
+   - The ECS tasks connect to the RDS instance using a JDBC connection string.
+   - Database credentials are securely stored in AWS Secrets Manager.
+
+3. **Security**:
+
+   - Access is restricted to specific IPs or VPC subnets.
+   - RDS security group allows connections only from the ECS service security group.
+
+4. **Integration**:
+   - User data and image metadata are stored in the RDS database, providing efficient data retrieval for the application.
+
 ## CodeBuild Configuration
+
+![AWS Architecture Diagram](./public/codebuild.png)
 
 1. **CodeBuild YAML File** (`buildspec.yml`):
 
@@ -249,8 +306,6 @@ The application architecture includes:
 - Challenges with ECS task networking and resolutions.
 
 ---
-
-## Future Improvements
 
 ## Future Improvements
 
